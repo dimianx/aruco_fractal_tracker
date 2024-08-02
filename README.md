@@ -60,5 +60,13 @@ The node uses the following topics:
 - `image_output_topic` (output): The topic on which the node publishes images with detected markers and pose information.
 - `poses_output_topic` (output): The topic on which the node publishes the pose of the detected marker as a `geometry_msgs::msg::PoseStamped`.
 
+### Example Marker
+
+An example ArUco fractal marker configuration is provided in the `example_marker` folder. This folder contains both the marker image and configuration file necessary for testing the node. To use this example marker:
+
+1. Navigate to the `example_marker` folder.
+2. Print out the marker image (`marker.png`) and place it in the camera's field of view.
+3. Use the provided configuration file (`marker_configuration.yaml`) to run the node.
+
 # References
 - [Romero-Ramire, Francisco J., Rafael Munoz-Salinas, and Rafael Medina-Carnicer. "Fractal markers: A new approach for long-range marker pose estimation under occlusion." IEEE Access 7 (2019): 169908-169919.](https://doi.org/10.1109/ACCESS.2019.2951204)
