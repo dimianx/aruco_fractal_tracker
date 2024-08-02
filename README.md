@@ -14,7 +14,7 @@ This ROS2 package is designed to detect and estimate the pose of ArUco fractal m
 
 ### Prerequisites
 
-- **ROS2**: Make sure you have ROS2 installed on your system. This package has been tested with ROS2 FOXY, but it should work with other ROS2 distributions as well.
+- **ROS2**: Make sure you have ROS2 installed on your system. This package has been tested with ROS2 Foxy, but it should work with other ROS2 distributions as well.
 - **OpenCV**: For image processing.
 - **[ArUco Library](https://sourceforge.net/projects/aruco)**: Required for marker detection.
 
