@@ -60,4 +60,5 @@ The node uses the following topics:
 - `image_output_topic` (output): The topic on which the node publishes images with detected markers and pose information.
 - `poses_output_topic` (output): The topic on which the node publishes the pose of the detected marker as a `geometry_msgs::msg::PoseStamped`.
 
-## Example
+# References
+- [Romero-Ramire, Francisco J., Rafael Munoz-Salinas, and Rafael Medina-Carnicer. "Fractal markers: A new approach for long-range marker pose estimation under occlusion." IEEE Access 7 (2019): 169908-169919.](https://doi.org/10.1109/ACCESS.2019.2951204)
