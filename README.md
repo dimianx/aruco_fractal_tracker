@@ -22,18 +22,18 @@ This ROS2 package is designed to detect and estimate the pose of ArUco fractal m
 
 1. Clone this repository into your ROS2 workspace:
     ```sh
-    cd <your_workspace>
+    cd <your_workspace>/src
     git clone https://github.com/dimianx/aruco_fractal_tracker.git
     ```
 2. Navigate to the workspace root and build the package:
     ```sh
-    cd ~/ros2_ws
+    cd <your_workspace>
     colcon build
     ```
 
 3. Source your workspace:
     ```sh
-    source ~/ros2_ws/install/setup.bash
+    source ~/<your_workspace>/install/setup.bash
     ```
 
 ## Usage
