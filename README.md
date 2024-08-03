@@ -33,7 +33,7 @@ This ROS2 package is designed to detect and estimate the pose of ArUco fractal m
 
 3. Source your workspace:
     ```sh
-    source ~/<your_workspace>/install/setup.bash
+    source <your_workspace>/install/setup.bash
     ```
 
 ## Usage
