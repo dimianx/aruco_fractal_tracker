@@ -1,11 +1,26 @@
+/*
+ * This file is part of the aruco_fractal_tracker distribution (https://github.com/dimianx/aruco_fractal_tracker).
+ * Copyright (c) 2024-2025 Dmitry Anikin <dmitry.anikin@proton.me>.
+ *
+ * This program is free software: you can redistribute it and/or modify  
+ * it under the terms of the GNU General Public License as published by  
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but 
+ * WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License 
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "aruco_fractal_tracker/aruco_fractal_tracker_node.hpp"
 
 #include <stdexcept>
 #include <string>
-
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
-
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Vector3.h>
@@ -17,30 +32,83 @@ ArucoFractalTracker::ArucoFractalTracker(const rclcpp::NodeOptions &options)
 {
   this->declare_parameter<std::string>("marker_configuration", "");
   this->declare_parameter<double>("marker_size", 0.0);
-  this->declare_parameter<std::string>("cam_params_file", "");
 
-  auto cam_params_file = this->get_parameter("cam_params_file").get_value<std::string>();
-  aruco::CameraParameters cam_params;
-  cam_params.readFromXMLFile(cam_params_file);
-  if (!cam_params.isValid())
-    throw std::invalid_argument("Invalid camera parameters!");
+  auto marker_configuration = this->get_parameter("marker_configuration").get_value<std::string>();
+  marker_size_ = this->get_parameter("marker_size").get_value<double>();
+  
+  detector_.setConfiguration(marker_configuration);
+
+  camera_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
+    "camera_info_topic", 10, std::bind(&ArucoFractalTracker::cameraInfoCallback, this, std::placeholders::_1));
 
   image_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
     "image_input_topic", 10, std::bind(&ArucoFractalTracker::imageCallback, this, std::placeholders::_1));
 
   image_pub_ = this->create_publisher<sensor_msgs::msg::Image>("image_output_topic", 10);
 
-  marker_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
-    "poses_output_topic", 10);
-
-  auto marker_configuration = this->get_parameter("marker_configuration").get_value<std::string>();
-  auto marker_size = this->get_parameter("marker_size").get_value<double>();
-  
-  detector_.setConfiguration(marker_configuration);
-  detector_.setParams(cam_params, marker_size);
+  marker_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("poses_output_topic", 10);
 
   tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
 }
+
+void ArucoFractalTracker::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::SharedPtr msg)
+{
+  bool update_needed = false;
+
+  if (!camera_info_initialized_) {
+    update_needed = true;
+  } else {
+    if (msg->width != last_camera_info_.width || msg->height != last_camera_info_.height) {
+      update_needed = true;
+    } else {
+      for (int i = 0; i < 9; ++i) {
+        if (std::abs(msg->k[i] - last_camera_info_.k[i]) > 1e-6) {
+          update_needed = true;
+          break;
+        }
+      }
+      if (!update_needed && msg->d.size() == last_camera_info_.d.size()) {
+        for (size_t i = 0; i < msg->d.size(); ++i) {
+          if (std::abs(msg->d[i] - last_camera_info_.d[i]) > 1e-6) {
+            update_needed = true;
+            break;
+          }
+        }
+      } else if (!update_needed) {
+        update_needed = true;
+      }
+    }
+  }
+
+  if (!update_needed) {
+    return;
+  }
+
+  last_camera_info_ = *msg;
+  camera_info_initialized_ = true;
+
+  cv::Mat camera_matrix(3, 3, CV_64F);
+  for (int i = 0; i < 9; ++i)
+  {
+    camera_matrix.at<double>(i / 3, i % 3) = msg->k[i];
+  }
+
+  cv::Mat dist_coeffs(static_cast<int>(msg->d.size()), 1, CV_64F);
+  for (size_t i = 0; i < msg->d.size(); ++i)
+  {
+    dist_coeffs.at<double>(i, 0) = msg->d[i];
+  }
+
+  cv::Size image_size(msg->width, msg->height);
+
+  aruco::CameraParameters cam_params;
+  cam_params.setParams(camera_matrix, dist_coeffs, image_size);
+  if (!cam_params.isValid())
+    throw std::invalid_argument("Invalid camera parameters!");
+
+  detector_.setParams(cam_params, marker_size_);
+}
+
 
 void ArucoFractalTracker::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
 {
@@ -98,8 +166,7 @@ void ArucoFractalTracker::imageCallback(const sensor_msgs::msg::Image::SharedPtr
       pose.pose.orientation.w = quat.getW();
 
       marker_pose_pub_->publish(pose);
-        
-
+      
       int base_line = 0;
       int font_face = cv::FONT_HERSHEY_PLAIN;
       double font_scale = 1;
@@ -167,7 +234,7 @@ void ArucoFractalTracker::imageCallback(const sensor_msgs::msg::Image::SharedPtr
   }
 }
 
-} // namespace ssl
+} // namespace fractal_tracker
 
 #include "rclcpp_components/register_node_macro.hpp"
 RCLCPP_COMPONENTS_REGISTER_NODE(fractal_tracker::ArucoFractalTracker)
