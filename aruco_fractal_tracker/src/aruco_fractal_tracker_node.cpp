@@ -55,32 +55,46 @@ void ArucoFractalTracker::cameraInfoCallback(const sensor_msgs::msg::CameraInfo:
 {
   bool update_needed = false;
 
-  if (!camera_info_initialized_) {
+  if (!camera_info_initialized_) 
+  {
     update_needed = true;
-  } else {
-    if (msg->width != last_camera_info_.width || msg->height != last_camera_info_.height) {
+  } 
+  else 
+  {
+    if (msg->width != last_camera_info_.width || msg->height != last_camera_info_.height) 
+    {
       update_needed = true;
-    } else {
-      for (int i = 0; i < 9; ++i) {
-        if (std::abs(msg->k[i] - last_camera_info_.k[i]) > 1e-6) {
+    } 
+    else 
+    {
+      for (int i = 0; i < 9; ++i) 
+      {
+        if (std::abs(msg->k[i] - last_camera_info_.k[i]) > 1e-6) 
+        {
           update_needed = true;
           break;
         }
       }
-      if (!update_needed && msg->d.size() == last_camera_info_.d.size()) {
-        for (size_t i = 0; i < msg->d.size(); ++i) {
-          if (std::abs(msg->d[i] - last_camera_info_.d[i]) > 1e-6) {
+      if (!update_needed && msg->d.size() == last_camera_info_.d.size()) 
+      {
+        for (size_t i = 0; i < msg->d.size(); ++i) 
+        {
+          if (std::abs(msg->d[i] - last_camera_info_.d[i]) > 1e-6) 
+          {
             update_needed = true;
             break;
           }
         }
-      } else if (!update_needed) {
+      } 
+      else if (!update_needed) 
+      {
         update_needed = true;
       }
     }
   }
 
-  if (!update_needed) {
+  if (!update_needed) 
+  {
     return;
   }
 
